@@ -11,7 +11,7 @@ import SwiftUI
 struct hacklyticsApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            PushupDashboardView()
         }
     }
 }
