@@ -2,14 +2,6 @@
 //  BodyAngleChart.swift
 //  hacklytics
 //
-//  Created by Nathan Bai on 2/22/26.
-//
-
-
-//
-//  BodyAngleChart.swift
-//  hacklytics
-//
 //  Created by Nathan Bai on 2/21/26.
 //
 import SwiftUI
@@ -27,7 +19,8 @@ struct BodyAngleChart: View {
                 ForEach(data) { rep in
                     BarMark(
                         x: .value("Rep", "\(rep.repNumber)"),
-                        y: .value("Angle", rep.avgBodyAngle)
+                        yStart: .value("Base", 120),
+                        yEnd: .value("Angle", rep.avgBodyAngle)
                     )
                     .foregroundStyle(rep.avgBodyAngle < 150 ? .red : .green)
                 }
