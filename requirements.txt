@@ -1,0 +1,17 @@
+# API Server
+fastapi
+uvicorn
+python-multipart
+
+# Computer Vision & Math
+opencv-python
+mediapipe
+numpy
+
+# Signal Processing & Scoring
+scipy
+fastdtw
+
+# AI Coaching & Environment Variables
+snowflake-snowpark-python
+python-dotenv
