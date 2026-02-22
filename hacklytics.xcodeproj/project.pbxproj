@@ -333,11 +333,13 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = XRPBJZ4W73;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Pushup Pal";
 				INFOPLIST_KEY_NSCameraUsageDescription = "We need the camera to record your push-ups.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "We need the microphone to record video.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -367,11 +369,13 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = XRPBJZ4W73;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Pushup Pal";
 				INFOPLIST_KEY_NSCameraUsageDescription = "We need the camera to record your push-ups.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "We need the microphone to record video.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;

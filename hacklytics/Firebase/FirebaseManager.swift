@@ -50,15 +50,21 @@ class FirebaseManager {
                         guard let goal = newGoal, let rGoal = repGoal, let sGoal = scoreGoal else { return }
                         
                         // Get the existing goals from the AuthManager
-                        let currentRepGoal = AuthManager.shared.currentUserProfile?.currentRepGoal ?? 0
-                        let currentScoreGoal = AuthManager.shared.currentUserProfile?.currentScoreGoal ?? 0
-                        
-                        // 🚀 Only update if the user has reached or exceeded their existing targets
-                        // This ensures goals only "level up" once the current ones are conquered
+                        let currentRepGoal = AuthManager.shared.currentUserProfile?.currentRepGoal
+                        let currentScoreGoal = AuthManager.shared.currentUserProfile?.currentScoreGoal
+
+                        // First time: no goals exist yet, so just set them unconditionally
+                        guard let existingRepGoal = currentRepGoal, let existingScoreGoal = currentScoreGoal else {
+                            print("🎯 First time goal generation — setting baseline goals.")
+                            self.updateAIGoal(newGoal: goal, repGoal: rGoal, scoreGoal: sGoal)
+                            return
+                        }
+
+                        // Returning user: only level up if they've hit their targets
                         let maxRepsInHistory = recentSets.map { $0.totalValidReps }.max() ?? 0
                         let avgScoreInHistory = recentSets.isEmpty ? 0 : recentSets.reduce(0) { $0 + $1.overallScore } / recentSets.count
 
-                        if maxRepsInHistory >= currentRepGoal || avgScoreInHistory >= currentScoreGoal {
+                        if maxRepsInHistory >= existingRepGoal || avgScoreInHistory >= existingScoreGoal {
                             print("🎯 Goal Conquered! Updating to new targets: \(goal)")
                             self.updateAIGoal(newGoal: goal, repGoal: rGoal, scoreGoal: sGoal)
                         } else {

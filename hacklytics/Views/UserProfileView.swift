@@ -36,17 +36,22 @@ struct UserProfileView: View {
                                                             .foregroundColor(.purple)
                                                     }
                                                     
-                                                    Text(authManager.currentUserProfile?.currentAIGoal ?? "Keep pushing! Your AI is analyzing your baseline to generate your next goal.")
+                                                    Text(authManager.currentUserProfile?.currentAIGoal ?? "Keep pushing! Your coach is analyzing your baseline to generate your next goal.")
                                                         .font(.body)
                                                         .foregroundColor(.primary)
                                                         .fixedSize(horizontal: false, vertical: true) // Prevents text from truncating
                                                 }
                                                 
-                                                // 2. 🚀 NEW: The Progress Bars (Only show if we have goals from the backend)
+
                                                 if let repGoal = authManager.currentUserProfile?.currentRepGoal,
-                                                   let scoreGoal = authManager.currentUserProfile?.currentScoreGoal {
+                                                   let scoreGoal = authManager.currentUserProfile?.currentScoreGoal,
+                                                   repGoal > 0, // 🚀 This prevents "0 / 0" bars from showing
+                                                   scoreGoal > 0,
+                                                   let aiGoal = authManager.currentUserProfile?.currentAIGoal,
+                                                      aiGoal != "Keep pushing! Your coach is analyzing your baseline to generate your next goal."
+                                                {
                                                     
-                                                    // Calculate the current stats dynamically from the local array
+                                                    // Calculate stats only when goals exist
                                                     let maxReps = workoutHistory.map { $0.totalValidReps }.max() ?? 0
                                                     let avgScore = workoutHistory.isEmpty ? 0 : workoutHistory.reduce(0) { $0 + $1.overallScore } / workoutHistory.count
                                                     
@@ -64,8 +69,6 @@ struct UserProfileView: View {
                                                                     .bold()
                                                                     .foregroundColor(maxReps >= repGoal ? .green : .white)
                                                             }
-                                                            
-                                                            // Math: min() prevents the bar from overflowing past 100% if they beat the goal
                                                             ProgressView(value: Double(min(maxReps, repGoal)), total: Double(repGoal))
                                                                 .tint(maxReps >= repGoal ? .green : .purple)
                                                         }
@@ -83,7 +86,6 @@ struct UserProfileView: View {
                                                                     .bold()
                                                                     .foregroundColor(avgScore >= scoreGoal ? .green : .white)
                                                             }
-                                                            
                                                             ProgressView(value: Double(min(avgScore, scoreGoal)), total: Double(scoreGoal))
                                                                 .tint(avgScore >= scoreGoal ? .green : scoreColor(for: avgScore))
                                                         }
