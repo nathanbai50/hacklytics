@@ -1,41 +1,48 @@
 //
-//  DepthChart.swift
+//  BodyAngleChart.swift
+//  hacklytics
+//
+//  Created by Nathan Bai on 2/22/26.
+//
+
+
+//
+//  BodyAngleChart.swift
 //  hacklytics
 //
 //  Created by Nathan Bai on 2/21/26.
 //
-
 import SwiftUI
 import Charts
 
-struct DepthChart: View {
+struct BodyAngleChart: View {
     let data: [RepData]
     
     var body: some View {
         VStack(alignment: .leading) {
-            Text("Elbow Depth")
+            Text("Body Alignment")
                 .font(.headline)
             
             Chart {
                 ForEach(data) { rep in
-                    // 🚀 1. THE STRING TRICK: Convert repNumber to a String
                     BarMark(
                         x: .value("Rep", "\(rep.repNumber)"),
-                        y: .value("Angle", rep.minElbowAngle)
+                        y: .value("Angle", rep.avgBodyAngle)
                     )
-                    .foregroundStyle(rep.minElbowAngle > 90 ? .red : .green)
+                    .foregroundStyle(rep.avgBodyAngle < 150 ? .red : .green)
                 }
                 
-                RuleMark(y: .value("Target", 90))
+                RuleMark(y: .value("Target", 150))
                     .lineStyle(StrokeStyle(lineWidth: 2, dash: [5]))
                     .annotation(position: .top, alignment: .leading) {
-                        Text("90°").font(.caption).foregroundColor(.secondary)
+                        Text("150°").font(.caption).foregroundColor(.secondary)
                     }
             }
             .frame(height: 250)
             .chartYAxisLabel("Degrees (°)")
+            .chartYScale(domain: 120...190)
             .chartYAxis {
-                AxisMarks(values: .stride(by: 30)) { value in
+                AxisMarks(values: .stride(by: 15)) { value in
                     AxisGridLine()
                     AxisTick()
                     if let angle = value.as(Double.self) {
@@ -43,9 +50,6 @@ struct DepthChart: View {
                     }
                 }
             }
-            // 🚀 2. Look at how clean this is!
-            // We deleted .chartXScale and .chartXAxis entirely.
-            // SwiftUI's default categorical handling does all the hard work for us.
         }
         .padding()
         .background(Color(.systemBackground))

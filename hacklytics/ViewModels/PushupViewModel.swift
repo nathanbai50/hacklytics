@@ -5,7 +5,6 @@
 //  Created by Nathan Bai on 2/20/26.
 //
 
-
 import Foundation
 import Combine
 
@@ -18,8 +17,14 @@ extension Data {
     }
 }
 
+// 1. ADD THIS: A struct to catch the Python server's error format
+struct ServerResponse: Codable {
+    let status: String?
+    let message: String?
+}
+
 class PushupViewModel: ObservableObject {
-    @Published var currentSet: SetData? // Using your SetData model
+    @Published var currentSet: SetData?
     @Published var isProcessing: Bool = false
     @Published var errorMessage: String?
     
@@ -27,26 +32,35 @@ class PushupViewModel: ObservableObject {
         isProcessing = true
         errorMessage = nil
         
-        // 1. Set the URL (Update this to your Python server's local IP or deployed URL)
-        guard let url = URL(string: "http://127.0.0.1:5000/analyze") else { return }
+        print("🚀 [TEST] Received video for upload at: \(videoURL.path)")
+        
+        let serverURLString = "https://kristi-incredible-niko.ngrok-free.dev/analyze"
+        guard let url = URL(string: serverURLString) else {
+            print("❌ Invalid URL")
+            self.isProcessing = false
+            return
+        }
+        
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         
-        // 2. Create the Boundary
         let boundary = "Boundary-\(UUID().uuidString)"
         request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
         
-        // 3. Build the Multipart Form Body
         var body = Data()
         let filename = videoURL.lastPathComponent
-        // If recording natively on iOS, this might be "video/quicktime" (.mov)
         let mimeType = "video/quicktime"
         
-        body.append("--\(boundary)\r\n")
-        body.append("Content-Disposition: form-data; name=\"video\"; filename=\"\(filename)\"\r\n")
-        body.append("Content-Type: \(mimeType)\r\n\r\n")
+        let appendString = { (string: String) in
+            if let data = string.data(using: .utf8) {
+                body.append(data)
+            }
+        }
         
-        // Try to load the video data
+        appendString("--\(boundary)\r\n")
+        appendString("Content-Disposition: form-data; name=\"file\"; filename=\"\(filename)\"\r\n")
+        appendString("Content-Type: \(mimeType)\r\n\r\n")
+        
         do {
             let videoData = try Data(contentsOf: videoURL)
             body.append(videoData)
@@ -56,34 +70,71 @@ class PushupViewModel: ObservableObject {
             return
         }
         
-        body.append("\r\n--\(boundary)--\r\n")
+        appendString("\r\n--\(boundary)--\r\n")
         request.httpBody = body
         
-        // 4. Send the Request
         URLSession.shared.dataTask(with: request) { data, response, error in
-            // Always update UI state on the main thread
             DispatchQueue.main.async {
                 self.isProcessing = false
                 
                 if let error = error {
                     self.errorMessage = "Network error: \(error.localizedDescription)"
+                    print("❌ Network Error: \(error.localizedDescription)")
                     return
                 }
                 
                 guard let data = data else {
                     self.errorMessage = "No data received from server."
+                    print("❌ No data received.")
                     return
                 }
                 
-                // 5. Decode the Python JSON into your SetData struct
-                do {
-                    let decodedData = try JSONDecoder().decode(SetData.self, from: data)
-                    self.currentSet = decodedData
-                } catch {
-                    self.errorMessage = "Failed to decode results: \(error.localizedDescription)"
-                    print("Decoding error: \(error)")
+                if let rawString = String(data: data, encoding: .utf8) {
+                    print("Raw Server Response: \(rawString)")
                 }
-            }
+                
+                do {
+                    // 1. Check if it's an error message first (your existing logic)
+                    if let errorResponse = try? JSONDecoder().decode(ServerResponse.self, from: data),
+                       errorResponse.status == "error",
+                       let msg = errorResponse.message {
+                        
+                        self.errorMessage = msg
+                        print("❌ Server Rejected Video: \(msg)")
+                        return
+                    }
+
+                    // 2. NEW: A temporary struct that perfectly matches the Python JSON
+                    // (Notice how we just use snake_case here so we don't even need CodingKeys!)
+                    struct PythonSetResponse: Codable {
+                        let overall_score: Int
+                        let total_valid_reps: Int
+                        let coaching_takeaway: String
+                        let rep_data: [RepData]
+                    }
+
+                    // 3. Decode the raw data into our temporary Python struct
+                    let pythonData = try JSONDecoder().decode(PythonSetResponse.self, from: data)
+                    
+                    // 4. Map it into your official Firebase SetData model!
+                    let newSet = SetData(
+                        id: nil,          // Pass nil so Firestore auto-generates the document ID
+                        date: Date(),
+                        overallScore: pythonData.overall_score,
+                        totalValidReps: pythonData.total_valid_reps,
+                        coachingTakeaway: pythonData.coaching_takeaway,
+                        repData: pythonData.rep_data
+                    )
+                    
+                    self.currentSet = newSet
+                    print("✅ Successfully decoded and mapped SetData!")
+                    
+                    FirebaseManager.shared.saveWorkout(set: newSet)
+                    
+                } catch {
+                    self.errorMessage = "Failed to decode results."
+                    print("❌ Decoding error: \(error)")
+                }            }
         }.resume()
     }
 }
